@@ -21,7 +21,15 @@ if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function(pos
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
     }).addTo(map);
 
-    L.marker([latitude, longitude]).addTo(map)
+    const redIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+        iconSize: [25, 41], // Default size
+        iconAnchor: [12, 41], // Point of the icon corresponding to marker's location
+        popupAnchor: [1, -34] // Point where the popup opens relative to the iconAnchor
+    });
+
+    L.marker([latitude, longitude], {icon: redIcon}).addTo(map)
         .bindPopup('A pretty CSS popup.<br> Easily customizable.')
         .openPopup();
 
