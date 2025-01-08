@@ -21,6 +21,8 @@ if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function(pos
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
     }).addTo(map);
 
+
+    // Customize red icon maker for current location
     const redIcon = L.icon({
         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
         shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
@@ -29,9 +31,28 @@ if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function(pos
         popupAnchor: [1, -34] // Point where the popup opens relative to the iconAnchor
     });
 
+    // Current location Maker
     L.marker([latitude, longitude], {icon: redIcon}).addTo(map)
         .bindPopup('A pretty CSS popup.<br> Easily customizable.')
         .openPopup();
+
+    // Add exercise maker on map
+    map.on('click', function (mapEvent) {
+        const {lat,lng} = mapEvent.latlng
+        L.marker([lat,lng])
+            .addTo(map)
+            .bindPopup(
+                L.popup({
+                    maxWidth: 250,
+                    minWidth: 100,
+                    autoClose:false,
+                    closeOnClick: false,
+                    className: 'running-popup',
+                })
+                )
+            .setPopupContent("Workout!")
+            .openPopup();
+    })
 
 }, function() {
     alert("Can't fetch the location!");
