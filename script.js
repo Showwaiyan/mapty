@@ -11,10 +11,13 @@ const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 
+// Gloab Variable for Map
+let map, mapEvent;
+
 if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function(pos) {
     const {latitude, longitude} = pos.coords;
     const zoomLevel = 16;
-    const map = L.map('map').setView([latitude, longitude], zoomLevel);
+    map = L.map('map').setView([latitude, longitude], zoomLevel);
 
     L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -32,28 +35,46 @@ if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function(pos
     });
 
     // Current location Maker
-    L.marker([latitude, longitude], {icon: redIcon}).addTo(map)
-        .bindPopup('A pretty CSS popup.<br> Easily customizable.')
-        .openPopup();
+    // L.marker([latitude, longitude], {icon: redIcon}).addTo(map)
+    //     .bindPopup('A pretty CSS popup.<br> Easily customizable.')
+    //     .openPopup();
 
     // Add exercise maker on map
-    map.on('click', function (mapEvent) {
-        const {lat,lng} = mapEvent.latlng
-        L.marker([lat,lng])
-            .addTo(map)
-            .bindPopup(
-                L.popup({
-                    maxWidth: 250,
-                    minWidth: 100,
-                    autoClose:false,
-                    closeOnClick: false,
-                    className: 'running-popup',
-                })
-                )
-            .setPopupContent("Workout!")
-            .openPopup();
+    map.on('click', function (mapE) {
+        mapEvent = mapE;
+        form.classList.remove("hidden");
+        inputDistance.focus();
     })
 
 }, function() {
     alert("Can't fetch the location!");
+})
+
+form.addEventListener('submit',(e)=>{
+    // Prevent Default Behaviour
+    e.preventDefault();
+
+    // Clear Input Field
+    inputCadence.value = inputDistance.value = inputDuration.value = inputElevation.value = "";
+
+    // Adding marker to map
+    const {lat,lng} = mapEvent.latlng
+    L.marker([lat,lng])
+        .addTo(map)
+        .bindPopup(
+            L.popup({
+                maxWidth: 250,
+                minWidth: 100,
+                autoClose:false,
+                closeOnClick: false,
+                className: 'running-popup',
+            })
+            )
+        .setPopupContent("Workout!")
+        .openPopup();
+})
+
+inputType.addEventListener('change', (e)=>{
+    inputElevation.closest(".form__row").classList.toggle("form__row--hidden");
+    inputCadence.closest(".form__row").classList.toggle("form__row--hidden");
 })
