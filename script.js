@@ -11,70 +11,73 @@ const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 
-// Gloab Variable for Map
-let map, mapEvent;
+class App {
+    #map;
+    #mapEvent;
 
-if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function(pos) {
-    const {latitude, longitude} = pos.coords;
-    const zoomLevel = 16;
-    map = L.map('map').setView([latitude, longitude], zoomLevel);
+    constructor() {
+        this._getPosition();
 
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
-    }).addTo(map);
+        form.addEventListener('submit', this._newWorkout.bind(this));
+        inputType.addEventListener('change', this._toggleElevationField);
+    }
 
+    _getPosition() {
+        if (navigator.geolocation)
+            navigator.geolocation.getCurrentPosition(this._loadMap.bind(this),
+            function() {
+            alert("Can't fetch the location!");
+            })
+    }
 
-    // Customize red icon maker for current location
-    const redIcon = L.icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-        iconSize: [25, 41], // Default size
-        iconAnchor: [12, 41], // Point of the icon corresponding to marker's location
-        popupAnchor: [1, -34] // Point where the popup opens relative to the iconAnchor
-    });
+    _loadMap(position) {
+        const {latitude, longitude} = position.coords;
+        const zoomLevel = 16;
+        this.#map = L.map('map').setView([latitude, longitude], zoomLevel);
 
-    // Current location Maker
-    // L.marker([latitude, longitude], {icon: redIcon}).addTo(map)
-    //     .bindPopup('A pretty CSS popup.<br> Easily customizable.')
-    //     .openPopup();
+        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
+        }).addTo(this.#map);
 
-    // Add exercise maker on map
-    map.on('click', function (mapE) {
-        mapEvent = mapE;
+        // Add exercise maker on map
+        this.#map.on('click', this._showForm.bind(this))
+    }
+
+    _showForm(mapE) {
+        this.#mapEvent = mapE;
         form.classList.remove("hidden");
         inputDistance.focus();
-    })
+    }
 
-}, function() {
-    alert("Can't fetch the location!");
-})
+    _toggleElevationField(e) {
+        inputElevation.closest(".form__row").classList.toggle("form__row--hidden");
+        inputCadence.closest(".form__row").classList.toggle("form__row--hidden");
+    }
 
-form.addEventListener('submit',(e)=>{
-    // Prevent Default Behaviour
-    e.preventDefault();
+    _newWorkout(e) {
+        // Prevent Default Behaviour
+        e.preventDefault();
 
-    // Clear Input Field
-    inputCadence.value = inputDistance.value = inputDuration.value = inputElevation.value = "";
+        // Clear Input Field
+        inputCadence.value = inputDistance.value = inputDuration.value = inputElevation.value = "";
 
-    // Adding marker to map
-    const {lat,lng} = mapEvent.latlng
-    L.marker([lat,lng])
-        .addTo(map)
-        .bindPopup(
-            L.popup({
-                maxWidth: 250,
-                minWidth: 100,
-                autoClose:false,
-                closeOnClick: false,
-                className: 'running-popup',
-            })
-            )
-        .setPopupContent("Workout!")
-        .openPopup();
-})
+        // Adding marker to map
+        const {lat,lng} = this.#mapEvent.latlng
+        L.marker([lat,lng])
+            .addTo(this.#map)
+            .bindPopup(
+                L.popup({
+                    maxWidth: 250,
+                    minWidth: 100,
+                    autoClose:false,
+                    closeOnClick: false,
+                    className: 'running-popup',
+                })
+                )
+            .setPopupContent("Workout!")
+            .openPopup();
+    }
+}
 
-inputType.addEventListener('change', (e)=>{
-    inputElevation.closest(".form__row").classList.toggle("form__row--hidden");
-    inputCadence.closest(".form__row").classList.toggle("form__row--hidden");
-})
+const mapty = new App();
