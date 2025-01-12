@@ -89,6 +89,9 @@ class App {
 
         // Add exercise maker on map
         this.#map.on('click', this._showForm.bind(this))
+
+        // Getting data from local storage
+        this._getLocalStorage();
     }
 
     _showForm(mapE) {
@@ -154,6 +157,9 @@ class App {
 
         // Hide From
         this._HideForm();
+
+        // Save to local storage
+        this._setLocalStorage();
     }
 
     _renderWorkoutMaker(workout) {
@@ -233,6 +239,27 @@ class App {
                 duration: 1,
             }
         })
+    }
+
+    _setLocalStorage() {
+        localStorage.setItem("workouts",JSON.stringify(this.#workouts));
+    }
+
+    _getLocalStorage() {
+        const data = JSON.parse(localStorage.getItem("workouts"));
+
+        if (!data) return;
+
+        this.#workouts = data;
+        this.#workouts.forEach(workout=>{
+            this._renderWorkoutInHTML(workout);
+            this._renderWorkoutMaker(workout);
+        })
+    }
+
+    reset() {
+        localStorage.removeItem("workouts");
+        location.reload();
     }
 }
 
