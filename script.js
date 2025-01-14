@@ -252,6 +252,11 @@ class App {
 
         this.#workouts = data;
         this.#workouts.forEach(workout=>{
+            // Set Prototype Chain
+            if (workout.type === 'running') Object.setPrototypeOf(workout, Running.prototype);
+            else Object.setPrototypeOf(workout, Cycling.prototype);
+            workout.date = new Date(workout.date);
+
             this._renderWorkoutInHTML(workout);
             this._renderWorkoutMaker(workout);
         })
