@@ -43,9 +43,9 @@ class Running extends Workout {
 class Cycling extends Workout {
     type = "cycling";
 
-    constructor(coords,distance,duration,elevaionGain) {
+    constructor(coords,distance,duration,elevation) {
         super(coords,distance,duration);
-        this.elevaionGain = elevaionGain;
+        this.elevation = elevation;
         this.speed = this.calcSpeed();
 
         this._setDescription();
@@ -62,12 +62,18 @@ class App {
     #zoomLevel = 13;
     #workouts = [];
 
+    #editMode = false;
+    #currentEditWorkout = null;
+    #currentEditWorkoutEl = null;
+
     constructor() {
         this._getPosition();
 
         form.addEventListener('submit', this._newWorkout.bind(this));
+        form.addEventListener('submit',this._updateWorkout.bind(this));
         inputType.addEventListener('change', this._toggleElevationField);
         containerWorkouts.addEventListener('click',this._moveToPopUp.bind(this));
+        containerWorkouts.addEventListener('click',this._editWorkout.bind(this));
     }
 
     _getPosition() {
@@ -97,10 +103,13 @@ class App {
     _showForm(mapE) {
         this.#mapEvent = mapE;
         form.classList.remove("hidden");
+        if (this.#editMode) {
+            inputType.setAttribute("disabled",true);
+        } else inputType.removeAttribute("disabled");
         inputDistance.focus();
     }
 
-    _HideForm() {
+    _hideForm() {
         // Clear Input Field
         inputCadence.value = inputDistance.value = inputDuration.value = inputElevation.value = "";
 
@@ -112,7 +121,7 @@ class App {
         }, 1000);
     }
 
-    _toggleElevationField(e) {
+    _toggleElevationField() {
         inputElevation.closest(".form__row").classList.toggle("form__row--hidden");
         inputCadence.closest(".form__row").classList.toggle("form__row--hidden");
     }
@@ -120,6 +129,7 @@ class App {
     _newWorkout(e) {
         // Prevent Default Behaviour
         e.preventDefault();
+        if (this.#editMode) return;
 
         //Get data from form
         const {lat,lng} = this.#mapEvent.latlng
@@ -156,7 +166,7 @@ class App {
         this._renderWorkoutMaker(workout);
 
         // Hide From
-        this._HideForm();
+        this._hideForm();
 
         // Save to local storage
         this._setLocalStorage();
@@ -182,15 +192,18 @@ class App {
     _renderWorkoutInHTML(workout) {
         let html = `
             <li class="workout workout--${workout.type}" data-id="${workout.id}">
-                <h2 class="workout__title">${workout.description}</h2>
+                <div class="workout__nav">
+                    <h2 class="workout__title">${workout.description}</h2>
+                    <button class="btn btn--edit">✏️</button>
+                </div>
                 <div class="workout__details">
                     <span class="workout__icon">${workout.type === 'running' ? '🏃‍♂' : '🚴‍♀️'}</span>
-                    <span class="workout__value">${workout.distance}</span>
+                    <span class="workout__value workout__value--distance">${workout.distance}</span>
                     <span class="workout__unit">km</span>
                 </div>
                 <div class="workout__details">
                     <span class="workout__icon">⏱</span>
-                    <span class="workout__value">${workout.duration}</span>
+                    <span class="workout__value workout__value--duration">${workout.duration}</span>
                     <span class="workout__unit">min</span>
                 </div>
         `
@@ -198,12 +211,12 @@ class App {
             html += `
                 <div class="workout__details">
                     <span class="workout__icon">⚡️</span>
-                    <span class="workout__value">${workout.pace.toFixed(1)}</span>
+                    <span class="workout__value workout__value--pace">${workout.pace.toFixed(1)}</span>
                     <span class="workout__unit">min/km</span>
                 </div>
                 <div class="workout__details">
                     <span class="workout__icon">🦶🏼</span>
-                    <span class="workout__value">${workout.cadence}</span>
+                    <span class="workout__value workout__value--cadence">${workout.cadence}</span>
                     <span class="workout__unit">spm</span>
                 </div>
             </li>
@@ -212,12 +225,12 @@ class App {
             html += `
                 <div class="workout__details">
                     <span class="workout__icon">⚡️</span>
-                    <span class="workout__value">${workout.speed.toFixed(1)}</span>
+                    <span class="workout__value workout__value--speed">${workout.speed.toFixed(1)}</span>
                     <span class="workout__unit">km/h</span>
                 </div>
                 <div class="workout__details">
                     <span class="workout__icon">⛰</span>
-                    <span class="workout__value">${workout.elevaionGain}</span>
+                    <span class="workout__value workout__value--elevation">${workout.elevation}</span>
                     <span class="workout__unit">m</span>
                 </div>
             </li>
@@ -260,6 +273,68 @@ class App {
             this._renderWorkoutInHTML(workout);
             this._renderWorkoutMaker(workout);
         })
+    }
+
+    _editWorkout(e) {
+        if (!e.target.classList.contains("btn--edit")) return;
+        this.#editMode = true;
+        this._showForm();
+
+        this.#currentEditWorkoutEl = e.target.closest(".workout");
+        this.#currentEditWorkout = this.#workouts.find(workout=>workout.id===this.#currentEditWorkoutEl.dataset.id);
+
+        inputType.value = this.#currentEditWorkout.type;
+        inputDistance.value = this.#currentEditWorkout.distance;
+        inputDuration.value = this.#currentEditWorkout.duration;
+        if (this.#currentEditWorkout.type === "running") {
+            inputElevation.closest(".form__row").classList.add("form__row--hidden");
+            inputCadence.closest(".form__row").classList.remove("form__row--hidden");
+            inputCadence.value = this.#currentEditWorkout.cadence;
+        }
+        else if (this.#currentEditWorkout.type === "cycling") {
+            inputElevation.closest(".form__row").classList.remove("form__row--hidden");
+            inputCadence.closest(".form__row").classList.add("form__row--hidden");
+            inputElevation.value = this.#currentEditWorkout.elevation;
+        }
+    }
+
+    _updateWorkout() {
+        if (!this.#editMode) return;
+        // change workout value from input
+        this.#currentEditWorkout.distance = +inputDistance.value;
+        this.#currentEditWorkout.duration = +inputDuration.value;
+        // running workout
+        if (this.#currentEditWorkout.type === 'running') {
+            this.#currentEditWorkout.cadence = +inputCadence.value;
+            this.#currentEditWorkout.pace = this.#currentEditWorkout.calcPace();
+        }
+        else if (this.#currentEditWorkout.type === 'cycling') {
+            this.#currentEditWorkout.elevation = +inputElevation.value;
+            this.#currentEditWorkout.speed = this.#currentEditWorkout.calcSpeed();
+        }
+
+        this._hideForm();
+        // Updating workout html
+        this.#currentEditWorkout._setDescription();
+        this.#currentEditWorkoutEl.querySelector('.workout__title').innerText = this.#currentEditWorkout.description;
+        this.#currentEditWorkoutEl.querySelector('.workout__icon').innerText = this.#currentEditWorkout.type === 'running' ? '🏃‍♂' : '🚴‍♀️';
+        this.#currentEditWorkoutEl.querySelector('.workout__value--distance').innerText = this.#currentEditWorkout.distance;
+        this.#currentEditWorkoutEl.querySelector('.workout__value--duration').innerText = this.#currentEditWorkout.duration;
+
+        if (this.#currentEditWorkout.type === 'running') {
+            this.#currentEditWorkoutEl.querySelector('.workout__value--pace').innerText = this.#currentEditWorkout.pace.toFixed(1);
+            this.#currentEditWorkoutEl.querySelector('.workout__value--cadence').innerText = this.#currentEditWorkout.cadence;
+        } else {
+            this.#currentEditWorkoutEl.querySelector('.workout__value--speed').innerText = this.#currentEditWorkout.speed.toFixed(1);
+            this.#currentEditWorkoutEl.querySelector('.workout__value--elevation').innerText = this.#currentEditWorkout.elevation;
+        }
+
+        this.#currentEditWorkout = this.#currentEditWorkoutEl = null;
+        this._setLocalStorage();
+
+        setTimeout(() => {
+            this.#editMode = false;
+        }, 1000);
     }
 
     reset() {
