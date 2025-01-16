@@ -66,6 +66,8 @@ class App {
     #currentEditWorkout = null;
     #currentEditWorkoutEl = null;
 
+    #markers = [];
+
     constructor() {
         this._getPosition();
 
@@ -74,6 +76,7 @@ class App {
         inputType.addEventListener('change', this._toggleElevationField);
         containerWorkouts.addEventListener('click',this._moveToPopUp.bind(this));
         containerWorkouts.addEventListener('click',this._editWorkout.bind(this));
+        containerWorkouts.addEventListener('click',this._deleteWorkout.bind(this));
     }
 
     _getPosition() {
@@ -174,7 +177,7 @@ class App {
 
     _renderWorkoutMaker(workout) {
         // Adding marker to map
-        L.marker(workout.coords)
+        const marker = L.marker(workout.coords)
             .addTo(this.#map)
             .bindPopup(
                 L.popup({
@@ -187,6 +190,7 @@ class App {
                 )
             .setPopupContent("Workout!")
             .openPopup();
+        this.#markers.push(marker);
     }
 
     _renderWorkoutInHTML(workout) {
@@ -194,7 +198,10 @@ class App {
             <li class="workout workout--${workout.type}" data-id="${workout.id}">
                 <div class="workout__nav">
                     <h2 class="workout__title">${workout.description}</h2>
-                    <button class="btn btn--edit">✏️</button>
+                    <div>
+                        <button class="btn btn--edit">✏️</button>
+                        <button class="btn btn--delete">🗑️</button>
+                    </div>
                 </div>
                 <div class="workout__details">
                     <span class="workout__icon">${workout.type === 'running' ? '🏃‍♂' : '🚴‍♀️'}</span>
@@ -335,6 +342,28 @@ class App {
         setTimeout(() => {
             this.#editMode = false;
         }, 1000);
+    }
+
+    _deleteWorkout(e) {
+        if (!e.target.classList.contains('btn--delete')) return;
+
+        const workoutEl = e.target.closest('.workout');
+
+        // Finding index for removeing element
+        const workoutIndex = this.#workouts.findIndex((el)=>el.id === workoutEl.dataset.id);
+
+        // remove from map
+        this.#markers[workoutIndex].remove();
+        this.#markers.splice(workoutIndex,1);
+
+        // remove from array
+        this.#workouts.splice(workoutIndex,1);
+
+        // remove from dom
+        workoutEl.remove();
+
+        this._setLocalStorage();
+
     }
 
     reset() {
