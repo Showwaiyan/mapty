@@ -7,6 +7,7 @@ const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
+const deleteAllBtn = document.querySelector('.btn--delete-all');
 
 class Workout {
     date = new Date();
@@ -77,6 +78,7 @@ class App {
         containerWorkouts.addEventListener('click',this._moveToPopUp.bind(this));
         containerWorkouts.addEventListener('click',this._editWorkout.bind(this));
         containerWorkouts.addEventListener('click',this._deleteWorkout.bind(this));
+        deleteAllBtn.addEventListener('click',this.reset);
     }
 
     _getPosition() {
@@ -244,7 +246,12 @@ class App {
         `;
 
         form.insertAdjacentHTML("afterend",html);
-    }
+
+        //Activate delete all function when workouts are more than 4
+        if (this.#workouts.length > 4) {
+            deleteAllBtn.style.display = "inline-block";
+        }
+}
 
     _moveToPopUp(e) {
         const workoutEl = e.target.closest(".workout");
