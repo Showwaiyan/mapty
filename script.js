@@ -7,7 +7,12 @@ const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
+
+const formAction = document.querySelector('.form__action');
 const deleteAllBtn = document.querySelector('.btn--delete-all');
+const sortBtn = document.querySelector('.btn--sort');
+const ascendingBtn = document.querySelector(".btn--ascending-data");
+const descendingBtn = document.querySelector(".btn--descending-data");
 
 class Workout {
     date = new Date();
@@ -69,6 +74,10 @@ class App {
 
     #markers = [];
 
+    #sortingStyle = null;
+    #ascendingOrder = (a,b) => a[this.#sortingStyle]-b[this.#sortingStyle];
+    #desendingOrder = (a,b) => b[this.#sortingStyle]-a[this.#sortingStyle];
+
     constructor() {
         this._getPosition();
 
@@ -79,6 +88,9 @@ class App {
         containerWorkouts.addEventListener('click',this._editWorkout.bind(this));
         containerWorkouts.addEventListener('click',this._deleteWorkout.bind(this));
         deleteAllBtn.addEventListener('click',this.reset);
+        sortBtn.addEventListener('change',this._changeSortingStyle.bind(this));
+        ascendingBtn.addEventListener('click',this._sortInStyle.bind(this,this.#ascendingOrder));
+        descendingBtn.addEventListener('click',this._sortInStyle.bind(this,this.#desendingOrder));
     }
 
     _getPosition() {
@@ -249,7 +261,7 @@ class App {
 
         //Activate delete all function when workouts are more than 4
         if (this.#workouts.length > 4) {
-            deleteAllBtn.style.display = "inline-block";
+            formAction.style.display = "flex";
         }
 }
 
@@ -371,6 +383,21 @@ class App {
 
         this._setLocalStorage();
 
+    }
+
+    _changeSortingStyle(e) {
+        this.#sortingStyle = sortBtn.value;
+    }
+
+    _sortInStyle(type) {
+        if (!this.#sortingStyle) return;
+        const sortedWorkouts = this.#workouts.toSorted(type);
+
+        // Remove orginal HTML El
+        document.querySelectorAll(".workout").forEach(el=>el.remove());
+
+        // Add new workout
+        sortedWorkouts.forEach(workout=>this._renderWorkoutInHTML(workout));
     }
 
     reset() {

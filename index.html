@@ -21,7 +21,19 @@
   <body>
     <div class="sidebar">
       <img src="logo.png" alt="Logo" class="logo" />
-      <button class="btn btn--delete-all">Delete All 🗑️</button>
+      <div class="form__action">
+          <button class="btn btn--delete-all">Delete All 🗑️</button>
+          <div class="sort">
+            <select name="sort" id="sort" class="btn btn--sort">
+                <option value="none">Sort</option>
+                <option value="date">By Date</option>
+                <option value="distance">By Km</option>
+                <option value="duration">By Time</option>
+            </select>
+            <button class="btn btn--ascending-data">🔼</button>
+            <button class="btn btn--descending-data">🔽</button>
+          </div>
+      </div>
 
       <ul class="workouts">
         <form class="form hidden">
