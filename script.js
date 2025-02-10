@@ -138,6 +138,14 @@ class App {
         }, 1000);
     }
 
+    //Check data is valid (Number, Positive)
+    _isNumber(...inputs) {
+        return inputs.every(el => Number.isFinite(el));
+    }
+    _isPositive (...inputs) {
+        return inputs.every(el=>el>0);
+    }
+
     _toggleElevationField() {
         inputElevation.closest(".form__row").classList.toggle("form__row--hidden");
         inputCadence.closest(".form__row").classList.toggle("form__row--hidden");
@@ -155,20 +163,18 @@ class App {
         const duration = +inputDuration.value;
 
         let workout;
-        //Check data is valid (Number, Positive)
-        const validateInput = (...inputs)=>inputs.every(el => Number.isFinite(el));
-        const isPositive = (...inputs)=>inputs.every(el=>el>0);
+
 
         //Create workout based on type
         if (type === 'running') {
             const cadence = +inputCadence.value;
-            if (!validateInput(distance,duration,cadence) || !isPositive(distance,duration,cadence))
+            if (!this._isNumber(distance,duration,cadence) || !this._isPositive(distance,duration,cadence))
                 return alert("Please enter the valid number input and positive number!");
             workout = new Running([lat,lng],distance,duration,cadence)
         }
         else if (type === 'cycling') {
             const elevation = +inputElevation.value;
-             if (!validateInput(distance,duration,elevation) || !isPositive(distance,duration))
+             if (!this._isNumber(distance,duration,elevation) || !this._isPositive(distance,duration))
                 return alert("Please enter the valid number input and positive number!");
             workout = new Cycling([lat,lng],distance,duration,elevation)
         }
@@ -326,15 +332,19 @@ class App {
 
     _updateWorkout() {
         if (!this.#editMode) return;
+
+        if (!this._isNumber(+inputDistance.value,+inputDuration.value)) return alert("Please enter the valid number input and positive number!");
         // change workout value from input
         this.#currentEditWorkout.distance = +inputDistance.value;
         this.#currentEditWorkout.duration = +inputDuration.value;
         // running workout
         if (this.#currentEditWorkout.type === 'running') {
+            if (!this._isPositive(+inputCadence.value)) return alert("Please enter the valid number input and positive number!");
             this.#currentEditWorkout.cadence = +inputCadence.value;
             this.#currentEditWorkout.pace = this.#currentEditWorkout.calcPace();
         }
         else if (this.#currentEditWorkout.type === 'cycling') {
+            if (!this._isPositive(+inputElevation.value)) return alert("Please enter the valid number input and positive number!");
             this.#currentEditWorkout.elevation = +inputElevation.value;
             this.#currentEditWorkout.speed = this.#currentEditWorkout.calcSpeed();
         }
