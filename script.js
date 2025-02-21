@@ -10,6 +10,7 @@ const inputElevation = document.querySelector(".form__input--elevation");
 
 const formAction = document.querySelector(".form__action");
 const deleteAllBtn = document.querySelector(".btn--delete-all");
+const showAllBtn = document.querySelector(".btn--show-all");
 const sortBtn = document.querySelector(".btn--sort");
 const ascendingBtn = document.querySelector(".btn--ascending-data");
 const descendingBtn = document.querySelector(".btn--descending-data");
@@ -106,6 +107,7 @@ class App {
         containerWorkouts.addEventListener("click", this._editWorkout.bind(this));
         containerWorkouts.addEventListener("click", this._deleteWorkout.bind(this));
         deleteAllBtn.addEventListener("click", this.reset);
+        showAllBtn.addEventListener("click", this._showAllWorkouts.bind(this));
         sortBtn.addEventListener("change", this._changeSortingStyle.bind(this));
         ascendingBtn.addEventListener("click", this._sortInStyle.bind(this, this.#ascendingOrder));
         descendingBtn.addEventListener("click", this._sortInStyle.bind(this, this.#desendingOrder));
@@ -208,8 +210,6 @@ class App {
                 return alert("Please enter the valid number input and positive number!");
             workout = new Cycling([lat, lng], distance, duration, elevation, location);
         }
-        console.log(workout.location);
-
         //Push to workouts array
         this.#workouts.push(workout);
 
@@ -448,6 +448,18 @@ class App {
 
         // Add new workout
         sortedWorkouts.forEach((workout) => this._renderWorkoutInHTML(workout));
+    }
+
+    _showAllWorkouts() {
+        const latLngArr = this.#workouts.reduce((acc, cur) => {
+            acc.push(L.latLng(cur.coords[0], cur.coords[1]));
+            return acc;
+        }, []);
+        const bounds = L.latLngBounds(latLngArr);
+        this.#map.fitBounds(bounds, {
+            animate: true,
+            duration: 0.5,
+        });
     }
 
     reset() {
